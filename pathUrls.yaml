@@ -1,0 +1,6 @@
+- path: /gg
+  url: https://www.google.com
+- path: /fb
+  url: https://www.facebook.com
+- path: /li
+  url: https://www.linkedin.com
