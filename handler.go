@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	bolt "go.etcd.io/bbolt"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -87,4 +88,22 @@ func JSONHandler(jsonBytes []byte, fallback http.Handler) (http.HandlerFunc, err
 type jsonPathToUrl struct {
 	Path string `json:"path,omitempty"`
 	URL  string `json:"url,omitempty"`
+}
+
+func DbHandler(db *bolt.DB, fallback http.Handler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		path := r.URL.Path
+		var url []byte
+		db.View(func(tx *bolt.Tx) error {
+			b := tx.Bucket([]byte("MyBucket"))
+			url = b.Get([]byte(path))
+			return nil
+		})
+
+		if url != nil {
+			http.Redirect(w, r, string(url), http.StatusSeeOther)
+			return
+		} 
+		fallback.ServeHTTP(w, r)
+	}
 }
